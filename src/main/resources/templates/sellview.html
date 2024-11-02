@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ขาย</title>
+        <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200;500&display=swap" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" th:href="@{/css/style.css}" />
+    </head>
+    <body>
+        <div th:replace="/fragments/navbar-pc::.navbar"></div>
+        <br>
+        <br>
+        <br>
+        <div class="container mt-4">
+            <h1>ขาย</h1>
+            <form id="saleForm" th:action="@{/createbill}" method="post">
+
+                <!-- Customer Selection -->
+                <div class="mb-3">
+                    <label for="customerSearch" class="form-label">เลือกลูกค้า</label>
+                    <input type="text" class="form-control" id="customerSearch" placeholder="Start typing customer name">
+                    <select class="form-select mt-2" id="customerSelect" name="customerId" size="5"></select>
+                    <input type="hidden" name="customerId" id="hiddenCustomerId"> <!-- Hidden input for customer ID -->
+                </div>
+
+                <!-- Motorcycle Selection -->
+                <div id="motorcycleSelectionContainer">
+                    <div class="mb-3 motorcycle-entry">
+                        <label for="motorcycleSearch" class="form-label">เลือกรุ่นมอเตอร์ไซค์</label>
+                        <input type="text" class="form-control motorcycleSearch" placeholder="Start typing model name">
+                        <select class="form-select mt-2 motorcycleSelect" name="motorcycleId" size="5" multiple></select>
+                        <label for="amount" class="form-label mt-2">จำนวน</label>
+                        <input type="number" class="form-control amount" name="amount" required min="1" placeholder="Enter quantity">
+                        <button type="button" class="btn btn-danger mt-2 remove-motorcycle">ลบรถ</button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary" id="addMotorcycle">เพิ่มรถ</button>
+
+                <!-- Submit Button -->
+                <div class="d-flex justify-content-end mt-3">
+                    <button type="submit" class="btn btn-success">บันทึกการขาย</button>
+                </div>
+            </form>
+        </div>
+
+        <script>
+            // Function to handle customer search with AJAX
+            document.getElementById('customerSearch').addEventListener('input', function () {
+                const query = this.value;
+                fetch(`/api/search/customers?query=${query}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const customerSelect = document.getElementById('customerSelect');
+                        customerSelect.innerHTML = ''; // Clear previous results
+                        data.forEach(customer => {
+                            const option = document.createElement('option');
+                            option.value = customer.id;
+                            option.text = `${customer.firstName} ${customer.lastName}`;
+                            customerSelect.appendChild(option);
+                        });
+                    });
+            });
+
+            // Function to handle motorcycle search with AJAX
+            function setupMotorcycleSearch(entry) {
+                const motorcycleSearch = entry.querySelector('.motorcycleSearch');
+                motorcycleSearch.addEventListener('input', function () {
+                    const query = this.value;
+                    fetch(`/api/search/motorcycles?query=${query}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const motorcycleSelect = entry.querySelector('.motorcycleSelect');
+                            motorcycleSelect.innerHTML = ''; // Clear previous results
+                            data.forEach(motorcycle => {
+                                const option = document.createElement('option');
+                                option.value = motorcycle.id;
+                                option.text = motorcycle.model;
+                                option.dataset.stock = motorcycle.stock; // Store stock data in option
+                                motorcycleSelect.appendChild(option);
+                            });
+                        });
+                });
+            }
+
+            // Initial setup for the first motorcycle entry
+            setupMotorcycleSearch(document.querySelector('.motorcycle-entry'));
+
+            // Add new motorcycle entry
+            document.getElementById('addMotorcycle').addEventListener('click', function () {
+                const newEntry = document.querySelector('.motorcycle-entry').cloneNode(true);
+                newEntry.querySelector('.motorcycleSearch').value = ''; // Clear the input
+                newEntry.querySelector('.motorcycleSelect').innerHTML = ''; // Clear previous options
+                newEntry.querySelector('.amount').value = ''; // Clear amount input
+                document.getElementById('motorcycleSelectionContainer').appendChild(newEntry);
+                setupMotorcycleSearch(newEntry); // Setup search for new entry
+
+                // Add event listener for remove button
+                newEntry.querySelector('.remove-motorcycle').addEventListener('click', function() {
+                    newEntry.remove();
+                });
+            });
+
+            // Event listener to remove a motorcycle entry
+            document.querySelectorAll('.remove-motorcycle').forEach(button => {
+                button.addEventListener('click', function() {
+                    button.closest('.motorcycle-entry').remove();
+                });
+            });
+
+            // Check stock before form submission
+            document.getElementById('saleForm').addEventListener('submit', function(event) {
+                const motorcycleEntries = document.querySelectorAll('.motorcycle-entry');
+                const stockInsufficient = [];
+
+                motorcycleEntries.forEach(entry => {
+                    const motorcycleSelect = entry.querySelector('.motorcycleSelect');
+                    const amountInput = entry.querySelector('.amount');
+                    const selectedOptions = Array.from(motorcycleSelect.selectedOptions);
+
+                    selectedOptions.forEach(option => {
+                        const requestedAmount = parseInt(amountInput.value, 10);
+                        const availableStock = parseInt(option.dataset.stock, 10);
+                        if (requestedAmount > availableStock) {
+                            stockInsufficient.push(`${option.text} - Requested: ${requestedAmount}, Available: ${availableStock}`);
+                        }
+                    });
+                });
+
+                if (stockInsufficient.length > 0) {
+                    event.preventDefault(); // Prevent form submission
+                    alert("Insufficient stock for the following items:\n" + stockInsufficient.join('\n'));
+                }
+            });
+        </script>
+    </body>
+</html>

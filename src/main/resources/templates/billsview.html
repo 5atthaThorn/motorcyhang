@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Bills</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+    <div th:replace="/fragments/navbar-pc::.navbar"></div>
+    <br>
+    <br>
+    <br>
+    <div class="container mt-4">
+        <h1>ดูบิล</h1>
+        <br>
+        <table>
+            <thead>
+                <tr>
+                    <th>Bill ID</th>
+                    <th>Customer</th>
+                    <th>Total Amount</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="bill : ${bills}">
+                    <td th:text="${bill.id}"></td>
+                    <td th:text="${bill.customer.firstName} + ' ' + ${bill.customer.lastName}"></td>
+                    <td th:text="${bill.totalPrice}"></td>
+                    <td th:text="${#dates.format(bill.billDate, 'yyyy-MM-dd HH:mm')}"></td>
+                    <td>
+                        <form th:action="@{/bills/delete}" method="post" style="display:inline;">
+                            <input type="hidden" name="id" th:value="${bill.id}" />
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this bill?');">ลบ</button>
+                        </form>
+                        <a th:href="@{/bills/details/{id}(id=${bill.id})}" class="btn btn-info">ดูรายละเอียด</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการมอเตอร์ไซค์</title>
+
+    <!-- Google Fonts: Kanit -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200;500&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    
+    <!-- jQuery CDN -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div th:replace="/fragments/navbar-pc::.navbar"></div>
+    <br>
+    <br>
+    <br>
+    <div class="container mt-4">
+        <h1>จัดการมอเตอร์ไซค์</h1>
+        <br>
+    
+        <!-- Add User Button -->
+        <div class="d-flex justify-content-end mb-3">
+            <a href="/newmotorcycle" class="btn btn-success">เพิ่มมอเตอร์ไซค์</a> <!-- Link to the user creation form -->
+        </div>
+    
+        <!-- Users Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Motorcycle ID</th>
+                    <th>Model</th>
+                    <th>Stock</th>
+                    <th>Price</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="motorcycle: ${allMotorcycles}">
+                    <td th:text="${motorcycle.id}"></td>
+                    <td th:text="${motorcycle.model}"></td>
+                    <td th:text="${motorcycle.stock}"></td>
+                    <td th:text="${motorcycle.price}"></td>
+                    <td>
+                        <!-- Edit Button -->
+                        <a th:href="@{'/editmotorcycle/' + ${motorcycle.id}}" class="btn btn-primary">แก้ไข</a>
+                        <form th:action="@{'/deletemotorcycle/' + ${motorcycle.id}}" method="post" style="display:inline-block;" onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบมอเตอร์ไซค์รุ่นนี้?');">
+                            <input type="hidden" name="_method" value="delete"> <!-- Optional for method override if necessary -->
+                            <button type="submit" class="btn btn-danger">ลบ</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
